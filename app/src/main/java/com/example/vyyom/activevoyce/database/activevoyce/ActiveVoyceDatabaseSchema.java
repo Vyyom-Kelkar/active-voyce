@@ -6,79 +6,27 @@ package com.example.vyyom.activevoyce.database.activevoyce;
  * Class contains database schema and String constants for tables and columns.
  */
 
-class ActiveVoyceDatabaseSchema {
+public class ActiveVoyceDatabaseSchema {
 
-    static final class Users {
-        static final String NAME = "User";
+    public static final class Users {
+        public static final String NAME = "User";
 
-        static final class Cols {
-            static final String USER_NAME = "UserName";
-            static final String PASSWORD = "Password";
-            static final String HIGHSCORE = "HighScore";
+        public static final class Cols {
+            public static final String USER_NAME = "UserName";
+            public static final String PASSWORD = "Password";
+            public static final String HIGHSCORE = "HighScore";
         }
     }
 
-    static final class FileSize {
-        static final String NAME = "FileSize";
+    public static final class WordCombinations {
+        public static final String NAME = "WordCombinations";
 
-        static final class Cols {
-            static final String FILENAME = "FileName";
-            static final String SIZE = "Size";
-        }
-    }
-
-    static final class Verbs {
-        static final String NAME = "Verbs";
-
-        static final class Cols {
-            static final String ID = "Id";
-            static final String VERB = "Verb";
-        }
-    }
-
-    static final class Prepositions {
-        static final String NAME = "Prepositions";
-
-        static final class Cols {
-            static final String ID = "Id";
-            static final String PREPOSITION = "Preposition";
-        }
-    }
-
-    static final class Words {
-        static final String NAME = "Words";
-
-        static final class Cols {
-            static final String ID = "Id";
-            static final String WORD = "Word";
-        }
-    }
-
-    static final class Synonyms {
-        static final String NAME = "Synonyms";
-
-        static final class Cols {
-            static final String ID = "Id";
-            static final String SYNONYM = "Synonym";
-        }
-    }
-
-    static final class WordCombinations {
-        static final String NAME = "WordCombinations";
-
-        static final class Cols {
-            static final String VERBID = "VerbID";
-            static final String PREPOSITIONID = "PrepositionID";
-            static final String WORDID = "WordID";
-        }
-    }
-
-    static final class WordSynonyms {
-        static final String NAME = "WordSynonyms";
-
-        static final class Cols {
-            static final String WORDID = "WordID";
-            static final String SYNONYMID = "SynonymID";
+        public static final class Cols {
+            public static final String WORD = "Word";
+            public static final String VERB = "Verb";
+            public static final String PREPOSITION = "Preposition";
+            public static final String SYNONYM1 = "Synonym1";
+            public static final String SYNONYM2 = "Synonym2";
         }
     }
 }

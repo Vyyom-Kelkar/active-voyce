@@ -15,12 +15,12 @@ public class User implements Serializable {
     private String password;
     private Integer highScore;
 
-    // Public getter methods
+    // Getter methods
     public String getUserName() {
         return userName;
     }
 
-    public String getPassword() {
+    String getPassword() {
         return password;
     }
 
@@ -28,7 +28,7 @@ public class User implements Serializable {
         return highScore;
     }
 
-    // Public setter methods
+    // Setter methods
     public void setUserName(String username) {
         this.userName = username;
     }

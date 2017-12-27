@@ -13,4 +13,6 @@
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."
     </string>
+    <string name="single_player_start">1 Player</string>
+    <string name="welcome_text">WELCOME!!</string>
 </resources>

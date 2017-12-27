@@ -6,6 +6,7 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.ContentValues;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 
@@ -150,7 +151,10 @@ public class LoginActivity extends AppCompatActivity {
             if (newUser) {
                 Toast.makeText(this, "New Account Created!", Toast.LENGTH_SHORT).show();
             }
-            // TODO - Start next activity, pass values needed through intent
+
+            Intent intent = new Intent(this, WelcomeActivity.class);
+            startActivity(intent);
+            finish();
         }
     }
 

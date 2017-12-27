@@ -7,8 +7,14 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.example.vyyom.activevoyce.CSVHandler;
 import com.example.vyyom.activevoyce.PasswordHash;
 import com.example.vyyom.activevoyce.User;
+import com.example.vyyom.activevoyce.WordCombinations;
+
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 
 /**
  * Created by Vyyom on 12/22/2017.
@@ -96,6 +102,32 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         long newRowId = db.insertOrThrow(tableName, null, contentValues);
         if(newRowId < 0) {
             Log.d("ERROR", "User not saved in LoginActivity");
+        }
+    }
+
+    public void enterCSVData(Context context, ContentValues contentValues) {
+        CSVHandler csvHandler = new CSVHandler();
+        SQLiteDatabase db = this.getWritableDatabase();
+        try {
+            List<Object> wordList = csvHandler.readData(context);
+            for (Object combination : wordList) {
+                contentValues.put(ActiveVoyceDatabaseSchema.WordCombinations.Cols.WORD,
+                        ((WordCombinations) combination).getWord());
+                contentValues.put(ActiveVoyceDatabaseSchema.WordCombinations.Cols.VERB,
+                        ((WordCombinations) combination).getVerb());
+                contentValues.put(ActiveVoyceDatabaseSchema.WordCombinations.Cols.PREPOSITION,
+                        ((WordCombinations) combination).getPreposition());
+                contentValues.put(ActiveVoyceDatabaseSchema.WordCombinations.Cols.SYNONYM1,
+                        ((WordCombinations) combination).getSynonym1());
+                contentValues.put(ActiveVoyceDatabaseSchema.WordCombinations.Cols.SYNONYM2,
+                        ((WordCombinations) combination).getSynonym2());
+                long newRowId = db.insertOrThrow(ActiveVoyceDatabaseSchema.WordCombinations.NAME, null, contentValues);
+                if(newRowId < 0) {
+                    Log.d("ERROR", "User not saved in LoginActivity");
+                }
+            }
+        } catch (InvocationTargetException | IOException | IllegalAccessException | InstantiationException e) {
+            e.printStackTrace();
         }
     }
 

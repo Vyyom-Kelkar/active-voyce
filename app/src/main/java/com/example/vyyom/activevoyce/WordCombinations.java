@@ -58,4 +58,14 @@ public class WordCombinations {
     public void setSynonym2(String synonym2) {
         this.synonym2 = synonym2;
     }
+
+    @Override
+    public String toString() {
+        return "word = " + word +
+                ", verb = " + verb +
+                ", preposition = " + preposition +
+                ", synonym1 = " + synonym1 +
+                ", synonym2 = " + synonym2 +
+                ".";
+    }
 }

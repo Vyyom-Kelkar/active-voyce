@@ -27,10 +27,6 @@ import android.widget.Toast;
 import com.example.vyyom.activevoyce.database.activevoyce.ActiveVoyceDatabaseSchema;
 import com.example.vyyom.activevoyce.database.activevoyce.DatabaseHelper;
 
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.List;
-
 /**
  * A login screen that offers login via email/password.
  */
@@ -62,13 +58,8 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        CSVHandler csvHandler = new CSVHandler();
-        try {
-            List<Object> wordList = csvHandler.readData(this);
-            System.out.println(wordList.size());
-        } catch (InvocationTargetException | IOException | IllegalAccessException | InstantiationException e) {
-            e.printStackTrace();
-        }
+        ContentValues contentValues = new ContentValues();
+        mDatabaseHelper.enterCSVData(this, contentValues);
 
         // Set up the login form.
         mEmailView = findViewById(R.id.email);

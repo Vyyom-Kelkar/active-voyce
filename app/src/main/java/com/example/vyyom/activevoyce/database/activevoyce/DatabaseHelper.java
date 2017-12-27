@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.support.annotation.IntDef;
 import android.util.Log;
 
 import com.example.vyyom.activevoyce.CSVHandler;
@@ -13,7 +14,10 @@ import com.example.vyyom.activevoyce.User;
 import com.example.vyyom.activevoyce.WordCombinations;
 
 import java.io.IOException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,6 +28,17 @@ import java.util.List;
  */
 
 public class DatabaseHelper extends SQLiteOpenHelper {
+
+    private List<List<String>> sLists = new ArrayList<>();
+
+    static final int WORDS = 0;
+    static final int VERBS = 1;
+    static final int PREPOSITIONS = 2;
+    static final int SYNONYMS = 3;
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({WORDS, VERBS, PREPOSITIONS, SYNONYMS})
+    @interface ListsDef { }
 
     private static final int VERSION = 10;
     private static final String DATABASE_NAME = "activevoyce.db";
@@ -65,11 +80,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    /*
-    * TODO
-    * Add methods to get list of Verbs, list of Prepositions, list of synonyms,
-    * list of words.
-    */
     public User getUser (String username) {
         User user = new User();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -94,12 +104,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return user;
     }
 
+    public List<String> getList(@ListsDef int listNumber) {
+        return sLists.get(listNumber);
+    }
+
     public void enterUser(String tableName, String userName, String password, ContentValues contentValues) {
         SQLiteDatabase db = this.getWritableDatabase();
         String passwordHash = PasswordHash.hashPassword(password);
         contentValues.put(ActiveVoyceDatabaseSchema.Users.Cols.USER_NAME, userName);
         contentValues.put(ActiveVoyceDatabaseSchema.Users.Cols.PASSWORD, passwordHash);
-        long newRowId = db.insertOrThrow(tableName, null, contentValues);
+        long newRowId = db.insertWithOnConflict(tableName, null, contentValues,
+                SQLiteDatabase.CONFLICT_IGNORE);
         if(newRowId < 0) {
             Log.d("ERROR", "User not saved in LoginActivity");
         }
@@ -108,9 +123,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void enterCSVData(Context context, ContentValues contentValues) {
         CSVHandler csvHandler = new CSVHandler();
         SQLiteDatabase db = this.getWritableDatabase();
+        List<String> words = new ArrayList<>();
+        List<String> verbs = new ArrayList<>();
+        List<String> prepositions = new ArrayList<>();
+        List<String> synonyms = new ArrayList<>();
+
         try {
             List<Object> wordList = csvHandler.readData(context);
             for (Object combination : wordList) {
+                WordCombinations temp = (WordCombinations) combination;
+
+                words.add(temp.getWord());
+                verbs.add(temp.getVerb());
+                prepositions.add(temp.getPreposition());
+                synonyms.add(temp.getSynonym1());
+                synonyms.add(temp.getSynonym2());
+
                 contentValues.put(ActiveVoyceDatabaseSchema.WordCombinations.Cols.WORD,
                         ((WordCombinations) combination).getWord());
                 contentValues.put(ActiveVoyceDatabaseSchema.WordCombinations.Cols.VERB,
@@ -121,7 +149,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                         ((WordCombinations) combination).getSynonym1());
                 contentValues.put(ActiveVoyceDatabaseSchema.WordCombinations.Cols.SYNONYM2,
                         ((WordCombinations) combination).getSynonym2());
-                long newRowId = db.insertOrThrow(ActiveVoyceDatabaseSchema.WordCombinations.NAME, null, contentValues);
+                long newRowId = db.insertWithOnConflict(ActiveVoyceDatabaseSchema.WordCombinations.NAME,
+                        null, contentValues, SQLiteDatabase.CONFLICT_IGNORE);
                 if(newRowId < 0) {
                     Log.d("ERROR", "User not saved in LoginActivity");
                 }
@@ -129,10 +158,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         } catch (InvocationTargetException | IOException | IllegalAccessException | InstantiationException e) {
             e.printStackTrace();
         }
+
+        sLists.add(words);
+        sLists.add(verbs);
+        sLists.add(prepositions);
+        sLists.add(synonyms);
     }
 
-    /*
-    * TODO
-    * Add method to set User highscore
-    */
+    public void enterHighScore(String userName, int newScore) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(ActiveVoyceDatabaseSchema.Users.Cols.HIGHSCORE, newScore);
+        String whereClause = ActiveVoyceDatabaseSchema.Users.Cols.USER_NAME + " = \"" + userName + "\"";
+        long updateRowId = db.update(ActiveVoyceDatabaseSchema.Users.NAME, contentValues, whereClause, null);
+        if (updateRowId < 0) {
+            Log.d("ERROR", "High score not updated");
+        }
+    }
 }

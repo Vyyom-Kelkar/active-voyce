@@ -120,7 +120,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    public void enterCSVData(Context context, ContentValues contentValues) {
+    public void enterCSVData(Context context) {
+        ContentValues contentValues = new ContentValues();
         CSVHandler csvHandler = new CSVHandler();
         SQLiteDatabase db = this.getWritableDatabase();
         List<String> words = new ArrayList<>();

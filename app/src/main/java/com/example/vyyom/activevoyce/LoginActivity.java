@@ -58,9 +58,6 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        ContentValues contentValues = new ContentValues();
-        mDatabaseHelper.enterCSVData(this, contentValues);
-
         // Set up the login form.
         mEmailView = findViewById(R.id.email);
 

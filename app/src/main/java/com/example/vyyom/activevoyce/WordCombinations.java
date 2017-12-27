@@ -1,34 +1,24 @@
 package com.example.vyyom.activevoyce;
 
-import com.opencsv.bean.CsvBindByName;
-
 /**
  * Created by Vyyom on 12/27/2017.
  *
- * This file creates the bean to save CSV data to.
+ * This file creates the class to save CSV data to.
  */
 
 public class WordCombinations {
 
-    @CsvBindByName
     private String word;
-
-    @CsvBindByName
     private String verb;
-
-    @CsvBindByName
     private String preposition;
-
-    @CsvBindByName
     private String synonym1;
-
-    @CsvBindByName
     private String synonym2;
 
     public String getWord() {
         return word;
     }
 
+    @CSVAnnotation.CSVSetter(info = "word")
     public void setWord(String word) {
         this.word = word;
     }
@@ -37,6 +27,7 @@ public class WordCombinations {
         return verb;
     }
 
+    @CSVAnnotation.CSVSetter(info = "verb")
     public void setVerb(String verb) {
         this.verb = verb;
     }
@@ -45,6 +36,7 @@ public class WordCombinations {
         return preposition;
     }
 
+    @CSVAnnotation.CSVSetter(info = "preposition")
     public void setPreposition(String preposition) {
         this.preposition = preposition;
     }
@@ -53,6 +45,7 @@ public class WordCombinations {
         return synonym1;
     }
 
+    @CSVAnnotation.CSVSetter(info = "synonym1")
     public void setSynonym1(String synonym1) {
         this.synonym1 = synonym1;
     }
@@ -61,6 +54,7 @@ public class WordCombinations {
         return synonym2;
     }
 
+    @CSVAnnotation.CSVSetter(info = "synonym2")
     public void setSynonym2(String synonym2) {
         this.synonym2 = synonym2;
     }

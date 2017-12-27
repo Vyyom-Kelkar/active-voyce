@@ -1,10 +1,13 @@
 package com.example.vyyom.activevoyce.database.activevoyce;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
+import com.example.vyyom.activevoyce.PasswordHash;
 import com.example.vyyom.activevoyce.User;
 
 /**
@@ -38,8 +41,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE " +
                 ActiveVoyceDatabaseSchema.WordCombinations.NAME + "(" +
                 ActiveVoyceDatabaseSchema.WordCombinations.Cols.WORD + " varchar(30) primary key, " +
-                ActiveVoyceDatabaseSchema.WordCombinations.Cols.VERB + " varchar(30) unique not null, " +
-                ActiveVoyceDatabaseSchema.WordCombinations.Cols.PREPOSITION + " varchar(30) unique not null, " +
+                ActiveVoyceDatabaseSchema.WordCombinations.Cols.VERB + " varchar(30) not null, " +
+                ActiveVoyceDatabaseSchema.WordCombinations.Cols.PREPOSITION + " varchar(30) not null, " +
                 ActiveVoyceDatabaseSchema.WordCombinations.Cols.SYNONYM1 + " varchar(30), " +
                 ActiveVoyceDatabaseSchema.WordCombinations.Cols.SYNONYM2 + " varchar(30) " +
                 ")"
@@ -83,6 +86,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             cursor.close();
         }
         return user;
+    }
+
+    public void enterUser(String tableName, String userName, String password, ContentValues contentValues) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String passwordHash = PasswordHash.hashPassword(password);
+        contentValues.put(ActiveVoyceDatabaseSchema.Users.Cols.USER_NAME, userName);
+        contentValues.put(ActiveVoyceDatabaseSchema.Users.Cols.PASSWORD, passwordHash);
+        long newRowId = db.insertOrThrow(tableName, null, contentValues);
+        if(newRowId < 0) {
+            Log.d("ERROR", "User not saved in LoginActivity");
+        }
     }
 
     /*

@@ -6,7 +6,6 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.ContentValues;
 import android.content.DialogInterface;
-import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 
@@ -15,7 +14,6 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -29,12 +27,15 @@ import android.widget.Toast;
 import com.example.vyyom.activevoyce.database.activevoyce.ActiveVoyceDatabaseSchema;
 import com.example.vyyom.activevoyce.database.activevoyce.DatabaseHelper;
 
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
 /**
  * A login screen that offers login via email/password.
  */
 public class LoginActivity extends AppCompatActivity {
 
-    private SQLiteDatabase mSQLiteDatabase;
     private DatabaseHelper mDatabaseHelper = new DatabaseHelper(this);
     private User mUser;
 
@@ -61,7 +62,13 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        mSQLiteDatabase = new DatabaseHelper(this).getWritableDatabase();
+        CSVHandler csvHandler = new CSVHandler();
+        try {
+            List<Object> wordList = csvHandler.readData(this);
+            System.out.println(wordList.size());
+        } catch (InvocationTargetException | IOException | IllegalAccessException | InstantiationException e) {
+            e.printStackTrace();
+        }
 
         // Set up the login form.
         mEmailView = findViewById(R.id.email);
@@ -236,16 +243,7 @@ public class LoginActivity extends AppCompatActivity {
             }
 
             ContentValues values = new ContentValues();
-            String passwordHash = PasswordHash.hashPassword(mPassword);
-            values.put(ActiveVoyceDatabaseSchema.Users.Cols.USER_NAME, mEmail);
-            values.put(ActiveVoyceDatabaseSchema.Users.Cols.PASSWORD, passwordHash);
-            long newRowId = mSQLiteDatabase.insert(ActiveVoyceDatabaseSchema.Users.NAME,
-                    null,
-                    values
-            );
-            if(newRowId < 0) {
-                Log.d("ERROR", "User not saved in LoginActivity");
-            }
+            mDatabaseHelper.enterUser(ActiveVoyceDatabaseSchema.Users.NAME, mEmail, mPassword, values);
             mUser = mDatabaseHelper.getUser(mEmail);
 
             return true;

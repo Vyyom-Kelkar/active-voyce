@@ -11,14 +11,14 @@ import java.nio.charset.Charset;
  * This file contains methods for hashing passwords and checking passwords for hash match.
  */
 
-class PasswordHash {
+public class PasswordHash {
 
-    static String hashPassword(String password) {
+    public static String hashPassword(String password) {
         final HashCode hashCode = Hashing.sha1().hashString(password, Charset.defaultCharset());
         return hashCode.toString();
     }
 
-    static Boolean checkHashEquality(String hashValue, String valueToHash) {
+    public static Boolean checkHashEquality(String hashValue, String valueToHash) {
         return hashValue.equals((hashPassword(valueToHash)));
     }
 }

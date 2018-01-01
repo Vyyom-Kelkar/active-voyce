@@ -1,6 +1,7 @@
 package com.example.vyyom.activevoyce;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 /**
  * Created by Vyyom on 12/23/2017.
@@ -15,17 +16,29 @@ public class User implements Serializable {
     private String password;
     private Integer highScore;
 
+    public User() {
+        this.userName = "";
+        this.highScore = 0;
+    }
+
     // Getter methods
-    public String getUserName() {
-        return userName;
+    private String getUserName() {
+        return this.userName;
     }
 
     String getPassword() {
-        return password;
+        return this.password;
     }
 
-    public Integer getHighScore() {
-        return highScore;
+    private Integer getHighScore() {
+        return this.highScore;
+    }
+
+    public ArrayList<String> getInfo() {
+        ArrayList<String> stringList = new ArrayList<>();
+        stringList.add(this.getUserName());
+        stringList.add(this.getHighScore().toString());
+        return stringList;
     }
 
     // Setter methods

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.vyyom.activevoyce.GameActivity">
+
+    <RelativeLayout
+        android:id="@+id/relativeLayout"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <fragment
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:id="@+id/grid_view_fragment"
+            android:layout_marginTop="106dp" />
+
+        <Button
+            android:id="@+id/random_verb_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="23dp"
+            android:text="@string/randomize_verb"
+            android:textAllCaps="true" />
+
+        <Button
+            android:id="@+id/random_preposition_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/random_verb_button"
+            android:layout_alignBottom="@+id/random_verb_button"
+            android:layout_alignParentEnd="true"
+            android:text="@string/randomize_preposition"
+            android:textAllCaps="true"
+            tools:ignore="RelativeOverlap" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/random_verb_button"
+            android:layout_marginTop="24dp"
+            android:id="@+id/verb_and_preposition_view"
+            android:textAllCaps="true" />
+
+
+    </RelativeLayout>
+
+</android.support.constraint.ConstraintLayout>

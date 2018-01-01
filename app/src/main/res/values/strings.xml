@@ -15,4 +15,9 @@
     </string>
     <string name="single_player_start">1 Player</string>
     <string name="welcome_text">WELCOME!!</string>
+    <string name="_1_player_start">1 Player Start</string>
+    <string name="help">Help</string>
+    <string name="help_text">TODO</string>
+    <string name="randomize_preposition">Randomize Preposition</string>
+    <string name="randomize_verb">Randomize Verb</string>
 </resources>

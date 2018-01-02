@@ -3,4 +3,8 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="help_text_size">16sp</dimen>
+    <dimen name="text_border_width">2dp</dimen>
+    <dimen name="textview_margin">100dp</dimen>
+    <dimen name="textview_margin_preposition_button">85dp</dimen>
+    <dimen name="edittextview_vertical_margin">50dp</dimen>
 </resources>

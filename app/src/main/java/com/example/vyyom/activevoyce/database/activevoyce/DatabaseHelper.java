@@ -5,8 +5,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.support.annotation.IntDef;
 import android.util.Log;
+import android.util.Pair;
 
 import com.example.vyyom.activevoyce.CSVHandler;
 import com.example.vyyom.activevoyce.PasswordHash;
@@ -14,10 +14,9 @@ import com.example.vyyom.activevoyce.User;
 import com.example.vyyom.activevoyce.WordCombinations;
 
 import java.io.IOException;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -29,23 +28,17 @@ import java.util.List;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
-    private List<List<String>> sLists = new ArrayList<>();
-
-    static final int WORDS = 0;
-    static final int VERBS = 1;
-    static final int PREPOSITIONS = 2;
-    static final int SYNONYMS = 3;
-
-    @Retention(RetentionPolicy.SOURCE)
-    @IntDef({WORDS, VERBS, PREPOSITIONS, SYNONYMS})
-    @interface ListsDef { }
-
     private static final int VERSION = 10;
     private static final String DATABASE_NAME = "activevoyce.db";
+    private static final int FALSE = 0;
+    private static final int TRUE = 1;
+    private static final ArrayList<String> wordList = new ArrayList<>();
 
     public DatabaseHelper (Context context) {
         super (context, DATABASE_NAME, null, VERSION);
     }
+    public static final HashMap<String, Pair<String, String>> wordMap = new HashMap<>();
+    public static final HashMap<String, String[]> synonymMap = new HashMap<>();
 
     @Override
     public void onCreate (SQLiteDatabase db) {
@@ -68,6 +61,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 ActiveVoyceDatabaseSchema.WordCombinations.Cols.SYNONYM2 + " varchar(30) " +
                 ")"
         );
+
+        // CREATE Completions table
+        db.execSQL("CREATE TABLE " +
+                ActiveVoyceDatabaseSchema.Completions.NAME + "(" +
+                ActiveVoyceDatabaseSchema.Completions.Cols.USER + " varchar(30) not null, " +
+                ActiveVoyceDatabaseSchema.Completions.Cols.WORD + " varchar(30) not null, " +
+                ActiveVoyceDatabaseSchema.Completions.Cols.COMPLETE + " integer not null default 0, " +
+                "foreign key (" + ActiveVoyceDatabaseSchema.Completions.Cols.USER +
+                ") references " + ActiveVoyceDatabaseSchema.Users.NAME + "(" +
+                ActiveVoyceDatabaseSchema.Users.Cols.USER_NAME + "), " +
+                "foreign key (" + ActiveVoyceDatabaseSchema.Completions.Cols.WORD +
+                ") references " + ActiveVoyceDatabaseSchema.WordCombinations.NAME + "(" +
+                ActiveVoyceDatabaseSchema.WordCombinations.Cols.WORD + ")" +
+                ")"
+        );
     }
 
     @Override
@@ -75,10 +83,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         // DROP existing tables
         db.execSQL("DROP TABLE IF EXISTS " + ActiveVoyceDatabaseSchema.Users.NAME);
         db.execSQL("DROP TABLE IF EXISTS " + ActiveVoyceDatabaseSchema.WordCombinations.NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + ActiveVoyceDatabaseSchema.Completions.NAME);
 
         // CREATE database from schema
         onCreate(db);
     }
+
+
+    // Operations on Users table
 
     public User getUser (String username) {
         User user = new User();
@@ -104,41 +116,38 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return user;
     }
 
-    public List<String> getList(@ListsDef int listNumber) {
-        return sLists.get(listNumber);
-    }
-
     public void enterUser(String tableName, String userName, String password, ContentValues contentValues) {
         SQLiteDatabase db = this.getWritableDatabase();
         String passwordHash = PasswordHash.hashPassword(password);
         contentValues.put(ActiveVoyceDatabaseSchema.Users.Cols.USER_NAME, userName);
         contentValues.put(ActiveVoyceDatabaseSchema.Users.Cols.PASSWORD, passwordHash);
-        long newRowId = db.insertWithOnConflict(tableName, null, contentValues,
+        db.insertWithOnConflict(tableName, null, contentValues,
                 SQLiteDatabase.CONFLICT_IGNORE);
-        if(newRowId < 0) {
-            Log.d("ERROR", "User not saved in LoginActivity");
+        setInitialIncomplete(userName);
+    }
+
+    public void enterHighScore(String userName, int newScore) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(ActiveVoyceDatabaseSchema.Users.Cols.HIGHSCORE, newScore);
+        String whereClause = ActiveVoyceDatabaseSchema.Users.Cols.USER_NAME + " = \"" + userName + "\"";
+        long updateRowId = db.update(ActiveVoyceDatabaseSchema.Users.NAME, contentValues, whereClause, null);
+        if (updateRowId < 0) {
+            Log.d("ERROR", "High score not updated");
         }
     }
+
+    // Operations on WordCombinations table
 
     public void enterCSVData(Context context) {
         ContentValues contentValues = new ContentValues();
         CSVHandler csvHandler = new CSVHandler();
         SQLiteDatabase db = this.getWritableDatabase();
-        List<String> words = new ArrayList<>();
-        List<String> verbs = new ArrayList<>();
-        List<String> prepositions = new ArrayList<>();
-        List<String> synonyms = new ArrayList<>();
 
         try {
-            List<Object> wordList = csvHandler.readData(context);
-            for (Object combination : wordList) {
-                WordCombinations temp = (WordCombinations) combination;
-
-                words.add(temp.getWord());
-                verbs.add(temp.getVerb());
-                prepositions.add(temp.getPreposition());
-                synonyms.add(temp.getSynonym1());
-                synonyms.add(temp.getSynonym2());
+            List<Object> list = csvHandler.readData(context);
+            for (Object combination : list) {
+                wordList.add(((WordCombinations) combination).getWord());
 
                 contentValues.put(ActiveVoyceDatabaseSchema.WordCombinations.Cols.WORD,
                         ((WordCombinations) combination).getWord());
@@ -153,27 +162,27 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 long newRowId = db.insertWithOnConflict(ActiveVoyceDatabaseSchema.WordCombinations.NAME,
                         null, contentValues, SQLiteDatabase.CONFLICT_IGNORE);
                 if(newRowId < 0) {
-                    Log.d("ERROR", "User not saved in LoginActivity");
+                    Log.d("ERROR", ((WordCombinations) combination).getWord());
                 }
             }
         } catch (InvocationTargetException | IOException | IllegalAccessException | InstantiationException e) {
             e.printStackTrace();
         }
-
-        sLists.add(words);
-        sLists.add(verbs);
-        sLists.add(prepositions);
-        sLists.add(synonyms);
     }
 
-    public void enterHighScore(String userName, int newScore) {
+    // Operations on Completions table
+
+    // Private helper functions
+
+    private void setInitialIncomplete(String userName) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
-        contentValues.put(ActiveVoyceDatabaseSchema.Users.Cols.HIGHSCORE, newScore);
-        String whereClause = ActiveVoyceDatabaseSchema.Users.Cols.USER_NAME + " = \"" + userName + "\"";
-        long updateRowId = db.update(ActiveVoyceDatabaseSchema.Users.NAME, contentValues, whereClause, null);
-        if (updateRowId < 0) {
-            Log.d("ERROR", "High score not updated");
+        for(String word : wordList) {
+            contentValues.put(ActiveVoyceDatabaseSchema.Completions.Cols.USER, userName);
+            contentValues.put(ActiveVoyceDatabaseSchema.Completions.Cols.WORD, word);
+            contentValues.put(ActiveVoyceDatabaseSchema.Completions.Cols.COMPLETE, FALSE);
+            db.insertWithOnConflict(ActiveVoyceDatabaseSchema.Completions.NAME,
+                    null, contentValues, SQLiteDatabase.CONFLICT_IGNORE);
         }
     }
 }

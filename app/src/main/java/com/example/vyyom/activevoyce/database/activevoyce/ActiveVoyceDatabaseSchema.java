@@ -11,22 +11,32 @@ public class ActiveVoyceDatabaseSchema {
     public static final class Users {
         public static final String NAME = "User";
 
-        public static final class Cols {
-            public static final String USER_NAME = "UserName";
-            public static final String PASSWORD = "Password";
-            public static final String HIGHSCORE = "HighScore";
+        static final class Cols {
+            static final String USER_NAME = "UserName";
+            static final String PASSWORD = "Password";
+            static final String HIGHSCORE = "HighScore";
         }
     }
 
-    public static final class WordCombinations {
-        public static final String NAME = "WordCombinations";
+    static final class WordCombinations {
+        static final String NAME = "WordCombinations";
 
-        public static final class Cols {
-            public static final String WORD = "Word";
-            public static final String VERB = "Verb";
-            public static final String PREPOSITION = "Preposition";
-            public static final String SYNONYM1 = "Synonym1";
-            public static final String SYNONYM2 = "Synonym2";
+        static final class Cols {
+            static final String WORD = "Word";
+            static final String VERB = "Verb";
+            static final String PREPOSITION = "Preposition";
+            static final String SYNONYM1 = "Synonym1";
+            static final String SYNONYM2 = "Synonym2";
+        }
+    }
+
+    static final class Completions {
+        static final String NAME = "Completions";
+
+        static final class Cols {
+            static final String USER = "User";
+            static final String WORD = "Word";
+            static final String COMPLETE = "Complete";
         }
     }
 }

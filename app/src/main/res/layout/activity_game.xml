@@ -2,6 +2,7 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.example.vyyom.activevoyce.GameActivity">
@@ -15,21 +16,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <fragment
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:id="@+id/grid_view_fragment"
-            android:layout_marginTop="106dp" />
-
         <Button
             android:id="@+id/random_verb_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
-            android:layout_marginStart="23dp"
+            android:layout_marginStart="50dp"
+            android:layout_marginTop="50dp"
+            android:background="@drawable/oval_shape"
             android:text="@string/randomize_verb"
             android:textAllCaps="true" />
 
@@ -37,22 +30,69 @@
             android:id="@+id/random_preposition_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignBaseline="@+id/random_verb_button"
-            android:layout_alignBottom="@+id/random_verb_button"
-            android:layout_alignParentEnd="true"
+            android:layout_below="@+id/random_verb_button"
+            android:layout_marginStart="50dp"
+            android:layout_marginTop="50dp"
+            android:background="@drawable/oval_shape"
             android:text="@string/randomize_preposition"
             android:textAllCaps="true"
             tools:ignore="RelativeOverlap" />
 
         <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/textview_border"
+            android:layout_alignBaseline="@+id/random_verb_button"
+            android:layout_toEndOf="@id/random_verb_button"
+            android:layout_marginStart="@dimen/textview_margin" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/textview_border"
+            android:layout_alignBaseline="@+id/random_preposition_button"
+            android:layout_toEndOf="@id/random_preposition_button"
+            android:layout_marginStart="@dimen/textview_margin"/>
+
+        <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/random_verb_button"
-            android:layout_marginTop="24dp"
-            android:id="@+id/verb_and_preposition_view"
+            android:layout_below="@id/random_preposition_button"
+            android:layout_marginTop="@dimen/edittextview_vertical_margin"
+            android:inputType="text"
+            tools:ignore="LabelFor"
+            android:id="@+id/enter_word_field"/>
+
+        <Button
+            android:id="@+id/button"
+            style="?android:textAppearanceSmall"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginBottom="60dp"
+            android:text="@string/enter"
             android:textAllCaps="true" />
 
-
     </RelativeLayout>
+
+    <android.support.design.widget.BottomNavigationView
+        android:id="@+id/navigation"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="0dp"
+        android:layout_marginStart="0dp"
+        android:background="?android:attr/windowBackground"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:menu="@menu/navigation" />
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="20dp" />
 
 </android.support.constraint.ConstraintLayout>

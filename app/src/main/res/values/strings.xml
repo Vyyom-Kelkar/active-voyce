@@ -18,6 +18,10 @@
     <string name="_1_player_start">1 Player Start</string>
     <string name="help">Help</string>
     <string name="help_text">TODO</string>
-    <string name="randomize_preposition">Randomize Preposition</string>
-    <string name="randomize_verb">Randomize Verb</string>
+    <string name="randomize_preposition">Preposition</string>
+    <string name="randomize_verb">Verb</string>
+    <string name="title_activity_game">GameActivity</string>
+    <string name="play">Play</string>
+    <string name="view">View</string>
+    <string name="enter">Enter</string>
 </resources>

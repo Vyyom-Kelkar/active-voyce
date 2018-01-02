@@ -2,10 +2,12 @@
   <dictionary name="Vyyom">
     <words>
       <w>activevoyce</w>
+      <w>edittextview</w>
       <w>highscore</w>
       <w>noninfringement</w>
       <w>prepositionid</w>
       <w>synonymid</w>
+      <w>textview</w>
       <w>verbid</w>
       <w>voyce</w>
       <w>wordid</w>

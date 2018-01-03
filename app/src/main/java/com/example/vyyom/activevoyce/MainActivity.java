@@ -12,7 +12,7 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    private ArrayList<String> userInfo;
+    private User userInfo;
     private DatabaseHelper mDatabaseHelper;
 
     @Override
@@ -21,7 +21,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mDatabaseHelper = new DatabaseHelper(this);
-        userInfo = getIntent().getStringArrayListExtra("User");
+        //noinspection ConstantConditions
+        userInfo = (User) getIntent().getExtras().get("User");
 
         Button singlePlayerStartButton = findViewById(R.id.one_player_start_button);
         singlePlayerStartButton.setOnClickListener(new View.OnClickListener() {
@@ -41,13 +42,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startGame() {
-        if(!mDatabaseHelper.checkCompletion(userInfo.get(0))) {
-            mDatabaseHelper.resetGame(userInfo.get(0));
+        if(mDatabaseHelper.checkCompletion(userInfo.getUserName())) {
+            mDatabaseHelper.resetGame(userInfo);
         }
-        mDatabaseHelper.getIncompleteVerbs(userInfo.get(0));
-        mDatabaseHelper.getIncompletePrepositions(userInfo.get(0));
+        mDatabaseHelper.getIncompleteVerbs(userInfo.getUserName());
+        mDatabaseHelper.getIncompletePrepositions(userInfo.getUserName());
         Intent intent = new Intent(this, GameActivity.class);
-        intent.putStringArrayListExtra("User", userInfo);
+        intent.putExtra("User", userInfo);
         startActivity(intent);
         finish();
     }

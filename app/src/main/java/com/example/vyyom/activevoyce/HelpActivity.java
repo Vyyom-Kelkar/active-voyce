@@ -7,6 +7,8 @@ import android.util.Log;
 
 public class HelpActivity extends AppCompatActivity {
 
+    private User mUser = (User) getIntent().getExtras().get("User");
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -16,9 +18,6 @@ public class HelpActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         Intent intent = new Intent(this, MainActivity.class);
-        intent.putStringArrayListExtra("User",
-                getIntent().getStringArrayListExtra("User"));
-        Log.d("TESTING", intent.getStringArrayListExtra("User").get(0));
         startActivity(intent);
         finish();
     }

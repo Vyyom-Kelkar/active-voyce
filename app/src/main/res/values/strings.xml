@@ -24,5 +24,7 @@
     <string name="play">Play</string>
     <string name="view">View</string>
     <string name="enter">Enter</string>
-    <string name="play">Play</string>
+    <string name="correct_entry">Correct!</string>
+    <string name="premature_entry">Please generate verb-preposition pair first!</string>
+    <string name="incorrect_entry">Incorrect entry. Try again or generate a new pair.</string>
 </resources>

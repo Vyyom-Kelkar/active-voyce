@@ -5,7 +5,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 import android.util.Pair;
 
 import com.example.vyyom.activevoyce.CSVHandler;
@@ -13,18 +12,14 @@ import com.example.vyyom.activevoyce.PasswordHash;
 import com.example.vyyom.activevoyce.User;
 import com.example.vyyom.activevoyce.WordCombinations;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 
 /**
@@ -40,11 +35,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "activevoyce.db";
     private static final int FALSE = 0;
     private static final int TRUE = 1;
-    private static final ArrayList<String> wordList = new ArrayList<>();
     private static final HashMap<String, Pair<String, String>> WORD_MAP = new HashMap<>();
     private static final HashMap<String, String[]> SYNONYM_MAP = new HashMap<>();
     private static final Multimap<String, String> VERB_PREPOSITION_MAP = HashMultimap.create();
     private static final Multimap<String, String> PREPOSITION_VERB_MAP = HashMultimap.create();
+    private static ArrayList<Pair<String, String>> SYNONYM_PAIRS = new ArrayList<>();
 
 
     public DatabaseHelper (Context context) {
@@ -52,6 +47,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
     public static Vector<String> VERBS = new Vector<>();
     public static Vector<String> PREPOSITIONS = new Vector<>();
+    public static ArrayList<String> WORDS = new ArrayList<>();
 
     @Override
     public void onCreate (SQLiteDatabase db) {
@@ -60,7 +56,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 ActiveVoyceDatabaseSchema.Users.NAME + "(" +
                 ActiveVoyceDatabaseSchema.Users.Cols.USER_NAME + " varchar(30) primary key, " +
                 ActiveVoyceDatabaseSchema.Users.Cols.PASSWORD + " varchar(30) not null, " +
-                ActiveVoyceDatabaseSchema.Users.Cols.HIGHSCORE + " integer not null default 0 " +
+                ActiveVoyceDatabaseSchema.Users.Cols.HIGHSCORE + " integer not null default 0, " +
+                ActiveVoyceDatabaseSchema.Users.Cols.CURRENTSCORE + " integer not null default 0 " +
                 ")"
         );
 
@@ -108,7 +105,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
         String[] columns = {ActiveVoyceDatabaseSchema.Users.Cols.USER_NAME,
             ActiveVoyceDatabaseSchema.Users.Cols.PASSWORD,
-            ActiveVoyceDatabaseSchema.Users.Cols.HIGHSCORE
+            ActiveVoyceDatabaseSchema.Users.Cols.HIGHSCORE,
+            ActiveVoyceDatabaseSchema.Users.Cols.CURRENTSCORE
         };
         Cursor cursor =
                 db.query(ActiveVoyceDatabaseSchema.Users.NAME,
@@ -122,8 +120,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             user.setUserName(cursor.getString(0));
             user.setPassword(cursor.getString(1));
             user.setHighScore(cursor.getInt(2));
+            user.setCurrentScore(cursor.getInt(3));
             cursor.close();
         }
+        db.close();
         return user;
     }
 
@@ -135,9 +135,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.insertWithOnConflict(tableName, null, contentValues,
                 SQLiteDatabase.CONFLICT_IGNORE);
         setInitialIncomplete(userName);
+        db.close();
     }
 
-    public void enterHighScore(String userName, int newScore) {
+    private void updateHighScore(String userName, int newScore) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(ActiveVoyceDatabaseSchema.Users.Cols.HIGHSCORE, newScore);
@@ -145,21 +146,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String[] whereArgs = {userName};
         db.updateWithOnConflict(ActiveVoyceDatabaseSchema.Users.NAME, contentValues,
                 whereClause, whereArgs, SQLiteDatabase.CONFLICT_IGNORE);
+        db.close();
     }
 
     public void enterCSVData(Context context) {
         ContentValues contentValues = new ContentValues();
         CSVHandler csvHandler = new CSVHandler();
         SQLiteDatabase db = this.getWritableDatabase();
-
         try {
             List<Object> list = csvHandler.readData(context);
             for (Object combination : list) {
                 WordCombinations data = ((WordCombinations) combination);
-                wordList.add(data.getWord());
+                WORDS.add(data.getWord());
                 WORD_MAP.put(data.getWord(),
                         new Pair<>(data.getVerb(), data.getPreposition()));
                 SYNONYM_MAP.put(data.getWord(), new String[] {data.getSynonym1(), data.getSynonym2()});
+                SYNONYM_PAIRS.add(new Pair<>(data.getSynonym1(), data.getWord()));
+                SYNONYM_PAIRS.add(new Pair<>(data.getSynonym2(), data.getWord()));
                 VERB_PREPOSITION_MAP.put(data.getVerb(), data.getPreposition());
                 PREPOSITION_VERB_MAP.put(data.getPreposition(), data.getVerb());
 
@@ -179,47 +182,70 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         } catch (InvocationTargetException | IOException | IllegalAccessException | InstantiationException e) {
             e.printStackTrace();
         }
+        db.close();
     }
 
     private void setInitialIncomplete(String userName) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
-        for(String word : wordList) {
+        for(String word : WORDS) {
             contentValues.put(ActiveVoyceDatabaseSchema.Completions.Cols.USER, userName);
             contentValues.put(ActiveVoyceDatabaseSchema.Completions.Cols.WORD, word);
             contentValues.put(ActiveVoyceDatabaseSchema.Completions.Cols.COMPLETE, FALSE);
             db.insertWithOnConflict(ActiveVoyceDatabaseSchema.Completions.NAME,
                     null, contentValues, SQLiteDatabase.CONFLICT_IGNORE);
         }
+        db.close();
     }
 
-    public void markCompleted(String userName, String word) {
+    private void markCompleted(String userName, Set<String> wordsCompleted) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(ActiveVoyceDatabaseSchema.Completions.Cols.COMPLETE, TRUE);
         String whereClause = ActiveVoyceDatabaseSchema.Completions.Cols.USER + " = ?" +
                 " AND " + ActiveVoyceDatabaseSchema.Completions.Cols.WORD + " = ?";
-        String[] whereArgs = {userName, word};
-        db.updateWithOnConflict(ActiveVoyceDatabaseSchema.Completions.NAME, contentValues,
-                whereClause, whereArgs, SQLiteDatabase.CONFLICT_IGNORE);
-        VERBS.remove(WORD_MAP.get(word).first);
-        PREPOSITIONS.remove(WORD_MAP.get(word).second);
+        for(String word : wordsCompleted) {
+            String[] whereArgs = {userName, word};
+            db.updateWithOnConflict(ActiveVoyceDatabaseSchema.Completions.NAME, contentValues,
+                    whereClause, whereArgs, SQLiteDatabase.CONFLICT_IGNORE);
+            VERBS.remove(WORD_MAP.get(word).first);
+            PREPOSITIONS.remove(WORD_MAP.get(word).second);
+        }
+        db.close();
     }
 
-    public void resetGame(String userName){
+    private void updateCurrentScore(String userName, int score) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(ActiveVoyceDatabaseSchema.Users.Cols.CURRENTSCORE, score);
+        String whereClause = ActiveVoyceDatabaseSchema.Users.Cols.USER_NAME + " = ?";
+        db.updateWithOnConflict(ActiveVoyceDatabaseSchema.Users.NAME, contentValues,
+                whereClause,new String[] {userName},SQLiteDatabase.CONFLICT_IGNORE);
+        db.close();
+    }
+
+    public void saveGame(User user) {
+        markCompleted(user.getUserName(), user.getCompletedWords());
+        updateCurrentScore(user.getUserName(), user.getCurrentScore());
+        getIncompleteVerbs(user.getUserName());
+        getIncompletePrepositions(user.getUserName());
+    }
+
+    public void resetGame(User user){
         SQLiteDatabase db = this.getWritableDatabase();
         String whereClause = ActiveVoyceDatabaseSchema.Completions.Cols.USER + " = ?";
-        String[] whereArgs = {userName};
+        String[] whereArgs = {user.getUserName()};
         db.delete(ActiveVoyceDatabaseSchema.Completions.NAME, whereClause, whereArgs);
-        setInitialIncomplete(userName);
+        setInitialIncomplete(user.getUserName());
+        if(user.getHighScore() < user.getCurrentScore()) {
+            updateHighScore(user.getUserName(), user.getCurrentScore());
+        }
+        db.close();
     }
 
     public boolean checkCompletion(String userName) {
         SQLiteDatabase db = this.getReadableDatabase();
-        String[] columns = {ActiveVoyceDatabaseSchema.Completions.Cols.USER,
-                ActiveVoyceDatabaseSchema.Completions.Cols.WORD,
-                ActiveVoyceDatabaseSchema.Completions.Cols.COMPLETE
-        };
+        String[] columns = {ActiveVoyceDatabaseSchema.Completions.Cols.WORD};
         Cursor cursor =
                 db.query(ActiveVoyceDatabaseSchema.Completions.NAME,
                         columns,
@@ -228,8 +254,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                         ActiveVoyceDatabaseSchema.Completions.Cols.COMPLETE + " = ?",
                         new String[] {userName, String.valueOf(FALSE)}, null,
                         null, null, null);
-        boolean wordsLeft = cursor.getCount() > 0;
+        boolean wordsLeft = (cursor.getCount() == 0);
         cursor.close();
+        db.close();
         return wordsLeft;
     }
 
@@ -254,6 +281,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             }
             cursor.close();
         }
+        db.close();
     }
 
     public void getIncompletePrepositions(String userName) {
@@ -277,6 +305,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             }
             cursor.close();
         }
+        db.close();
     }
 
     public Vector<String> getVerbsForPreposition(String preposition) {
@@ -285,5 +314,33 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public Vector<String> getPrepositionsForVerb(String verb) {
         return new Vector<>(VERB_PREPOSITION_MAP.get(verb));
+    }
+
+    public Pair<String, String> getVerbPrepositionPair(String word) {
+        return WORD_MAP.get(word);
+    }
+
+    public String[] getSynonyms(String word) {
+        return SYNONYM_MAP.get(word);
+    }
+
+    public String getWord(String verb, String preposition) {
+        String word = "";
+        for(String temp : WORD_MAP.keySet()) {
+            if(WORD_MAP.get(temp).equals(new Pair<>(verb, preposition))) {
+                word = temp;
+            }
+        }
+        return word;
+    }
+
+    public String getWord(String synonym) {
+        String word = "";
+        for(Pair<String, String> pair : SYNONYM_PAIRS) {
+            if(pair.first.equalsIgnoreCase(synonym)) {
+                word = pair.second;
+            }
+        }
+        return word;
     }
 }

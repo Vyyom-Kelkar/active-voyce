@@ -1,7 +1,8 @@
 package com.example.vyyom.activevoyce;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by Vyyom on 12/23/2017.
@@ -14,15 +15,19 @@ public class User implements Serializable {
     // Private variables
     private String userName;
     private String password;
-    private Integer highScore;
+    private int highScore;
+    private int currentScore;
+    private Set<String> completedWords;
 
     public User() {
         this.userName = "";
         this.highScore = 0;
+        this.currentScore = 0;
+        this.completedWords = new HashSet<>();
     }
 
     // Getter methods
-    private String getUserName() {
+    public String getUserName() {
         return this.userName;
     }
 
@@ -30,15 +35,16 @@ public class User implements Serializable {
         return this.password;
     }
 
-    private Integer getHighScore() {
+    public int getHighScore() {
         return this.highScore;
     }
 
-    public ArrayList<String> getInfo() {
-        ArrayList<String> stringList = new ArrayList<>();
-        stringList.add(this.getUserName());
-        stringList.add(this.getHighScore().toString());
-        return stringList;
+    public int getCurrentScore() {
+        return this.currentScore;
+    }
+
+    public Set<String> getCompletedWords() {
+        return this.completedWords;
     }
 
     // Setter methods
@@ -52,5 +58,24 @@ public class User implements Serializable {
 
     public void setHighScore(Integer highScore) {
         this.highScore = highScore;
+    }
+
+    public void setCurrentScore(int currentScore) {
+        this.currentScore = currentScore;
+    }
+
+    void addCompletedWord(String completedWords) {
+        this.completedWords.add(completedWords);
+    }
+
+    @Override
+    public String toString() {
+        String info = "User Name = " + getUserName() + "\nHigh Score = " + getHighScore() +
+                "\nCurrent Score = " + getCurrentScore();
+        StringBuilder stringBuilder = new StringBuilder();
+        for(String word : getCompletedWords()) {
+            stringBuilder.append(word).append("\n");
+        }
+        return info + "\n" + stringBuilder.toString();
     }
 }

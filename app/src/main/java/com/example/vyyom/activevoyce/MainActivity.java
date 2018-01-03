@@ -6,12 +6,22 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
+import com.example.vyyom.activevoyce.database.activevoyce.DatabaseHelper;
+
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity {
+
+    private ArrayList<String> userInfo;
+    private DatabaseHelper mDatabaseHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mDatabaseHelper = new DatabaseHelper(this);
+        userInfo = getIntent().getStringArrayListExtra("User");
 
         Button singlePlayerStartButton = findViewById(R.id.one_player_start_button);
         singlePlayerStartButton.setOnClickListener(new View.OnClickListener() {
@@ -31,9 +41,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startGame() {
+        if(!mDatabaseHelper.checkCompletion(userInfo.get(0))) {
+            mDatabaseHelper.resetGame(userInfo.get(0));
+        }
+        mDatabaseHelper.getIncompleteVerbs(userInfo.get(0));
+        mDatabaseHelper.getIncompletePrepositions(userInfo.get(0));
         Intent intent = new Intent(this, GameActivity.class);
-        intent.putStringArrayListExtra("User",
-                getIntent().getStringArrayListExtra("User"));
+        intent.putStringArrayListExtra("User", userInfo);
         startActivity(intent);
         finish();
     }

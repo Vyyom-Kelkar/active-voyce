@@ -12,12 +12,20 @@ import com.example.vyyom.activevoyce.CSVHandler;
 import com.example.vyyom.activevoyce.PasswordHash;
 import com.example.vyyom.activevoyce.User;
 import com.example.vyyom.activevoyce.WordCombinations;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimap;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Vector;
 
 /**
  * Created by Vyyom on 12/22/2017.
@@ -33,12 +41,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final int FALSE = 0;
     private static final int TRUE = 1;
     private static final ArrayList<String> wordList = new ArrayList<>();
+    private static final HashMap<String, Pair<String, String>> WORD_MAP = new HashMap<>();
+    private static final HashMap<String, String[]> SYNONYM_MAP = new HashMap<>();
+    private static final Multimap<String, String> VERB_PREPOSITION_MAP = HashMultimap.create();
+    private static final Multimap<String, String> PREPOSITION_VERB_MAP = HashMultimap.create();
+
 
     public DatabaseHelper (Context context) {
         super (context, DATABASE_NAME, null, VERSION);
     }
-    public static final HashMap<String, Pair<String, String>> wordMap = new HashMap<>();
-    public static final HashMap<String, String[]> synonymMap = new HashMap<>();
+    public static Vector<String> VERBS = new Vector<>();
+    public static Vector<String> PREPOSITIONS = new Vector<>();
 
     @Override
     public void onCreate (SQLiteDatabase db) {
@@ -90,8 +103,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    // Operations on Users table
-
     public User getUser (String username) {
         User user = new User();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -130,14 +141,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(ActiveVoyceDatabaseSchema.Users.Cols.HIGHSCORE, newScore);
-        String whereClause = ActiveVoyceDatabaseSchema.Users.Cols.USER_NAME + " = \"" + userName + "\"";
-        long updateRowId = db.update(ActiveVoyceDatabaseSchema.Users.NAME, contentValues, whereClause, null);
-        if (updateRowId < 0) {
-            Log.d("ERROR", "High score not updated");
-        }
+        String whereClause = ActiveVoyceDatabaseSchema.Users.Cols.USER_NAME + " = ?";
+        String[] whereArgs = {userName};
+        db.updateWithOnConflict(ActiveVoyceDatabaseSchema.Users.NAME, contentValues,
+                whereClause, whereArgs, SQLiteDatabase.CONFLICT_IGNORE);
     }
-
-    // Operations on WordCombinations table
 
     public void enterCSVData(Context context) {
         ContentValues contentValues = new ContentValues();
@@ -147,32 +155,31 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         try {
             List<Object> list = csvHandler.readData(context);
             for (Object combination : list) {
-                wordList.add(((WordCombinations) combination).getWord());
+                WordCombinations data = ((WordCombinations) combination);
+                wordList.add(data.getWord());
+                WORD_MAP.put(data.getWord(),
+                        new Pair<>(data.getVerb(), data.getPreposition()));
+                SYNONYM_MAP.put(data.getWord(), new String[] {data.getSynonym1(), data.getSynonym2()});
+                VERB_PREPOSITION_MAP.put(data.getVerb(), data.getPreposition());
+                PREPOSITION_VERB_MAP.put(data.getPreposition(), data.getVerb());
 
                 contentValues.put(ActiveVoyceDatabaseSchema.WordCombinations.Cols.WORD,
-                        ((WordCombinations) combination).getWord());
+                        data.getWord());
                 contentValues.put(ActiveVoyceDatabaseSchema.WordCombinations.Cols.VERB,
-                        ((WordCombinations) combination).getVerb());
+                        data.getVerb());
                 contentValues.put(ActiveVoyceDatabaseSchema.WordCombinations.Cols.PREPOSITION,
-                        ((WordCombinations) combination).getPreposition());
+                        data.getPreposition());
                 contentValues.put(ActiveVoyceDatabaseSchema.WordCombinations.Cols.SYNONYM1,
-                        ((WordCombinations) combination).getSynonym1());
+                        data.getSynonym1());
                 contentValues.put(ActiveVoyceDatabaseSchema.WordCombinations.Cols.SYNONYM2,
-                        ((WordCombinations) combination).getSynonym2());
-                long newRowId = db.insertWithOnConflict(ActiveVoyceDatabaseSchema.WordCombinations.NAME,
+                        data.getSynonym2());
+                db.insertWithOnConflict(ActiveVoyceDatabaseSchema.WordCombinations.NAME,
                         null, contentValues, SQLiteDatabase.CONFLICT_IGNORE);
-                if(newRowId < 0) {
-                    Log.d("ERROR", ((WordCombinations) combination).getWord());
-                }
             }
         } catch (InvocationTargetException | IOException | IllegalAccessException | InstantiationException e) {
             e.printStackTrace();
         }
     }
-
-    // Operations on Completions table
-
-    // Private helper functions
 
     private void setInitialIncomplete(String userName) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -184,5 +191,99 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             db.insertWithOnConflict(ActiveVoyceDatabaseSchema.Completions.NAME,
                     null, contentValues, SQLiteDatabase.CONFLICT_IGNORE);
         }
+    }
+
+    public void markCompleted(String userName, String word) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(ActiveVoyceDatabaseSchema.Completions.Cols.COMPLETE, TRUE);
+        String whereClause = ActiveVoyceDatabaseSchema.Completions.Cols.USER + " = ?" +
+                " AND " + ActiveVoyceDatabaseSchema.Completions.Cols.WORD + " = ?";
+        String[] whereArgs = {userName, word};
+        db.updateWithOnConflict(ActiveVoyceDatabaseSchema.Completions.NAME, contentValues,
+                whereClause, whereArgs, SQLiteDatabase.CONFLICT_IGNORE);
+        VERBS.remove(WORD_MAP.get(word).first);
+        PREPOSITIONS.remove(WORD_MAP.get(word).second);
+    }
+
+    public void resetGame(String userName){
+        SQLiteDatabase db = this.getWritableDatabase();
+        String whereClause = ActiveVoyceDatabaseSchema.Completions.Cols.USER + " = ?";
+        String[] whereArgs = {userName};
+        db.delete(ActiveVoyceDatabaseSchema.Completions.NAME, whereClause, whereArgs);
+        setInitialIncomplete(userName);
+    }
+
+    public boolean checkCompletion(String userName) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] columns = {ActiveVoyceDatabaseSchema.Completions.Cols.USER,
+                ActiveVoyceDatabaseSchema.Completions.Cols.WORD,
+                ActiveVoyceDatabaseSchema.Completions.Cols.COMPLETE
+        };
+        Cursor cursor =
+                db.query(ActiveVoyceDatabaseSchema.Completions.NAME,
+                        columns,
+                        ActiveVoyceDatabaseSchema.Completions.Cols.USER + " = ?" +
+                                " AND " +
+                        ActiveVoyceDatabaseSchema.Completions.Cols.COMPLETE + " = ?",
+                        new String[] {userName, String.valueOf(FALSE)}, null,
+                        null, null, null);
+        boolean wordsLeft = cursor.getCount() > 0;
+        cursor.close();
+        return wordsLeft;
+    }
+
+    public void getIncompleteVerbs(String userName) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] columns = {ActiveVoyceDatabaseSchema.Completions.Cols.WORD};
+        Cursor cursor =
+                db.query(ActiveVoyceDatabaseSchema.Completions.NAME,
+                        columns,
+                        ActiveVoyceDatabaseSchema.Completions.Cols.USER + " = ?" +
+                                " AND " +
+                                ActiveVoyceDatabaseSchema.Completions.Cols.COMPLETE + " = ?",
+                        new String[] {userName, String.valueOf(FALSE)}, null,
+                        null, null, null);
+        if(cursor != null) {
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                if(!VERBS.contains(WORD_MAP.get(cursor.getString(0)).first)) {
+                    VERBS.add(WORD_MAP.get(cursor.getString(0)).first);
+                }
+                cursor.moveToNext();
+            }
+            cursor.close();
+        }
+    }
+
+    public void getIncompletePrepositions(String userName) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] columns = {ActiveVoyceDatabaseSchema.Completions.Cols.WORD};
+        Cursor cursor =
+                db.query(ActiveVoyceDatabaseSchema.Completions.NAME,
+                        columns,
+                        ActiveVoyceDatabaseSchema.Completions.Cols.USER + " = ?" +
+                                " AND " +
+                                ActiveVoyceDatabaseSchema.Completions.Cols.COMPLETE + " = ?",
+                        new String[] {userName, String.valueOf(FALSE)}, null,
+                        null, null, null);
+        if(cursor != null) {
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                if(!PREPOSITIONS.contains(WORD_MAP.get(cursor.getString(0)).second)) {
+                    PREPOSITIONS.add(WORD_MAP.get(cursor.getString(0)).second);
+                }
+                cursor.moveToNext();
+            }
+            cursor.close();
+        }
+    }
+
+    public Vector<String> getVerbsForPreposition(String preposition) {
+        return new Vector<>(PREPOSITION_VERB_MAP.get(preposition));
+    }
+
+    public Vector<String> getPrepositionsForVerb(String verb) {
+        return new Vector<>(VERB_PREPOSITION_MAP.get(verb));
     }
 }

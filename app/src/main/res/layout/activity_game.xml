@@ -39,19 +39,35 @@
             tools:ignore="RelativeOverlap" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/verb_or_preposition_border"
+            android:layout_marginTop="@dimen/verb_or_preposition_border"
+            android:textAllCaps="true"
+            android:textStyle="bold"
+            android:textAlignment="center"
+            android:textColor="@color/black"
+            android:id="@+id/verb_text_view"
             android:background="@drawable/textview_border"
             android:layout_alignBaseline="@+id/random_verb_button"
             android:layout_toEndOf="@id/random_verb_button"
+            android:layout_alignParentEnd="true"
             android:layout_marginStart="@dimen/textview_margin" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:layout_marginBottom="@dimen/verb_or_preposition_border"
+            android:layout_marginTop="@dimen/verb_or_preposition_border"
+            android:textAllCaps="true"
+            android:textStyle="bold"
+            android:id="@+id/preposition_text_view"
             android:background="@drawable/textview_border"
             android:layout_alignBaseline="@+id/random_preposition_button"
             android:layout_toEndOf="@id/random_preposition_button"
+            android:textAlignment="center"
+            android:layout_alignParentEnd="true"
             android:layout_marginStart="@dimen/textview_margin"/>
 
         <EditText
@@ -64,7 +80,7 @@
             android:id="@+id/enter_word_field"/>
 
         <Button
-            android:id="@+id/button"
+            android:id="@+id/enter_button"
             style="?android:textAppearanceSmall"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

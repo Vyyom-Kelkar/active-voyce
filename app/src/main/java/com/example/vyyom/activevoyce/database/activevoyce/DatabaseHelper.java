@@ -261,6 +261,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public void getIncompleteVerbs(String userName) {
+        VERBS.clear();
         SQLiteDatabase db = this.getReadableDatabase();
         String[] columns = {ActiveVoyceDatabaseSchema.Completions.Cols.WORD};
         Cursor cursor =
@@ -285,6 +286,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public void getIncompletePrepositions(String userName) {
+        PREPOSITIONS.clear();
         SQLiteDatabase db = this.getReadableDatabase();
         String[] columns = {ActiveVoyceDatabaseSchema.Completions.Cols.WORD};
         Cursor cursor =
@@ -320,6 +322,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return WORD_MAP.get(word);
     }
 
+    public boolean hasSynonyms(String word) {
+        return getSynonyms(word) == null;
+    }
+
     public String[] getSynonyms(String word) {
         return SYNONYM_MAP.get(word);
     }
@@ -337,10 +343,64 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public String getWord(String synonym) {
         String word = "";
         for(Pair<String, String> pair : SYNONYM_PAIRS) {
-            if(pair.first.equalsIgnoreCase(synonym)) {
+            if (pair.first != null && pair.first.equalsIgnoreCase(synonym)) {
                 word = pair.second;
             }
         }
         return word;
+    }
+
+    public void updateAfterCorrectEntry(String word) {
+        String[] strings = SYNONYM_MAP.get(word);
+        if(strings == null) {
+            SYNONYM_PAIRS.remove(new Pair<String, String>(null, word));
+        } else {
+            for(int i = 0; i < strings.length - 1; i++) {
+                SYNONYM_PAIRS.remove(new Pair<>(strings[i], word));
+            }
+        }
+        SYNONYM_MAP.remove(word);
+        WORDS.remove(word);
+        updateIncompletes(getVerbPrepositionPair(word).first, getVerbPrepositionPair(word).second);
+    }
+
+    private void updateIncompletes(String verb, String preposition) {
+        boolean verbFound = false;
+        boolean prepositionFound = false;
+        for(String x : WORDS) {
+            if(getVerbPrepositionPair(x).first.equalsIgnoreCase(verb)) {
+                verbFound = true;
+            }
+            if(getVerbPrepositionPair(x).second.equalsIgnoreCase(preposition)) {
+                prepositionFound = true;
+            }
+        }
+        if(!verbFound) {
+            VERBS.remove(verb);
+        }
+        if(!prepositionFound) {
+            PREPOSITIONS.remove(preposition);
+        }
+    }
+
+    // TODO delete after testing
+    public String printLists() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("WORDS: ");
+        for(String x : WORDS) {
+            stringBuilder.append(x).append(" ");
+        }
+        StringBuilder stringBuilder1 = new StringBuilder();
+        stringBuilder1.append("VERBS: ");
+        for(String y : VERBS) {
+            stringBuilder1.append(y).append(" ");
+        }
+        StringBuilder stringBuilder2 = new StringBuilder();
+        stringBuilder2.append("PREPOSITIONS: ");
+        for(String y : PREPOSITIONS) {
+            stringBuilder2.append(y).append(" ");
+        }
+        return (stringBuilder.toString() + "\n" +
+        stringBuilder1.toString() + "\n" + stringBuilder2.toString());
     }
 }

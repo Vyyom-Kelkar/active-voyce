@@ -27,4 +27,6 @@
     <string name="correct_entry">Correct!</string>
     <string name="premature_entry">Please generate verb-preposition pair first!</string>
     <string name="incorrect_entry">Incorrect entry. Try again or generate a new pair.</string>
+    <string name="score_text">Score:</string>
+    <string name="words_remaining_text">Words Remaining:</string>
 </resources>

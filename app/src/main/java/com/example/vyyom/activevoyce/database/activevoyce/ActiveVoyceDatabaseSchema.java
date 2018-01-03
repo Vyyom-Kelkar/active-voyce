@@ -16,6 +16,7 @@ public class ActiveVoyceDatabaseSchema {
             static final String PASSWORD = "Password";
             static final String HIGHSCORE = "HighScore";
             static final String CURRENTSCORE = "CurrentScore";
+            static final String SAVEDGAME = "SavedGame";
         }
     }
 

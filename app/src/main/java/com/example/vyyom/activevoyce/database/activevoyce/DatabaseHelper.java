@@ -48,6 +48,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static Vector<String> VERBS = new Vector<>();
     public static Vector<String> PREPOSITIONS = new Vector<>();
     public static ArrayList<String> WORDS = new ArrayList<>();
+    public static int TOTAL_VERBS;
+    public static int TOTAL_PREPOSITIONS;
 
     @Override
     public void onCreate (SQLiteDatabase db) {
@@ -155,6 +157,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         try {
             List<Object> list = csvHandler.readData(context);
+            TOTAL_VERBS = 0;
+            TOTAL_PREPOSITIONS = 0;
             for (Object combination : list) {
                 WordCombinations data = ((WordCombinations) combination);
                 WORDS.add(data.getWord());
@@ -165,6 +169,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 SYNONYM_PAIRS.add(new Pair<>(data.getSynonym2(), data.getWord()));
                 VERB_PREPOSITION_MAP.put(data.getVerb(), data.getPreposition());
                 PREPOSITION_VERB_MAP.put(data.getPreposition(), data.getVerb());
+                TOTAL_VERBS++;
+                TOTAL_PREPOSITIONS++;
 
                 contentValues.put(ActiveVoyceDatabaseSchema.WordCombinations.Cols.WORD,
                         data.getWord());

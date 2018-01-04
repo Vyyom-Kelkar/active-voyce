@@ -29,4 +29,8 @@
     <string name="incorrect_entry">Incorrect entry. Try again or generate a new pair.</string>
     <string name="score_text">Score:</string>
     <string name="words_remaining_text">Words Remaining:</string>
+    <string name="title_activity_grid">View</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
 </resources>

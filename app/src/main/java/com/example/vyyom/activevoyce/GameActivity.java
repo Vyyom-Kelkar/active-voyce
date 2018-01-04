@@ -47,7 +47,7 @@ public class GameActivity extends AppCompatActivity {
                         startActivityForResult(intent, 0);
                         return true;
                     case R.id.navigation_view:
-                        Intent intent1 = new Intent(GameActivity.this, GameActivity.class);
+                        Intent intent1 = new Intent(GameActivity.this, GridActivity.class);
                         intent1.putExtra("User", mUser);
                         startActivityForResult(intent1, 0);
                         return true;
@@ -149,6 +149,15 @@ public class GameActivity extends AppCompatActivity {
                         verbTextView.setText("");
                         prepositionTextView.setText("");
                         editTextView.setText("");
+                        if(mDatabaseHelper.checkCompletion(mUser.getUserName())) {
+                            Toast.makeText(GameActivity.this,
+                                    "Congratulations! You have won!", Toast.LENGTH_SHORT).show();
+                            mDatabaseHelper.resetGame(mUser);
+                            Intent intent = new Intent(GameActivity.this, MainActivity.class);
+                            intent.putExtra("User", mUser);
+                            startActivityForResult(intent, 0);
+                            finish();
+                        }
                     } else {
                         Toast.makeText(GameActivity.this,
                                 R.string.incorrect_entry, Toast.LENGTH_SHORT)

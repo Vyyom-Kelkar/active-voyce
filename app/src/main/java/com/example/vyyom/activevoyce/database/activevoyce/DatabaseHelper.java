@@ -240,6 +240,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if(user.getHighScore() < user.getCurrentScore()) {
             updateHighScore(user.getUserName(), user.getCurrentScore());
         }
+        user.setCurrentScore(0);
         db.close();
     }
 
@@ -277,6 +278,31 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             while (!cursor.isAfterLast()) {
                 if(!VERBS.contains(WORD_MAP.get(cursor.getString(0)).first)) {
                     VERBS.add(WORD_MAP.get(cursor.getString(0)).first);
+                }
+                cursor.moveToNext();
+            }
+            cursor.close();
+        }
+        db.close();
+    }
+
+    public void getIncompleteWords(String userName) {
+        WORDS.clear();
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] columns = {ActiveVoyceDatabaseSchema.Completions.Cols.WORD};
+        Cursor cursor =
+                db.query(ActiveVoyceDatabaseSchema.Completions.NAME,
+                        columns,
+                        ActiveVoyceDatabaseSchema.Completions.Cols.USER + " = ?" +
+                                " AND " +
+                                ActiveVoyceDatabaseSchema.Completions.Cols.COMPLETE + " = ?",
+                        new String[] {userName, String.valueOf(FALSE)}, null,
+                        null, null, null);
+        if(cursor != null) {
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                if(!WORDS.contains(cursor.getString(0))) {
+                    WORDS.add(cursor.getString(0));
                 }
                 cursor.moveToNext();
             }
@@ -323,7 +349,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public boolean hasSynonyms(String word) {
-        return getSynonyms(word) == null;
+        return getSynonyms(word)[0] != null;
     }
 
     public String[] getSynonyms(String word) {
@@ -383,24 +409,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    // TODO delete after testing
-    public String printLists() {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("WORDS: ");
-        for(String x : WORDS) {
-            stringBuilder.append(x).append(" ");
-        }
-        StringBuilder stringBuilder1 = new StringBuilder();
-        stringBuilder1.append("VERBS: ");
-        for(String y : VERBS) {
-            stringBuilder1.append(y).append(" ");
-        }
-        StringBuilder stringBuilder2 = new StringBuilder();
-        stringBuilder2.append("PREPOSITIONS: ");
-        for(String y : PREPOSITIONS) {
-            stringBuilder2.append(y).append(" ");
-        }
-        return (stringBuilder.toString() + "\n" +
-        stringBuilder1.toString() + "\n" + stringBuilder2.toString());
+    public void getSavedGame(User user) {
+        WORDS.removeAll(user.getCompletedWords());
+        getIncompleteVerbs(user.getUserName());
+        getIncompletePrepositions(user.getUserName());
+        getIncompleteWords(user.getUserName());
     }
 }

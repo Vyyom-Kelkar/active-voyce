@@ -2,7 +2,9 @@ package com.example.vyyom.activevoyce;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
@@ -42,12 +44,12 @@ public class GameActivity extends AppCompatActivity {
                     case R.id.navigation_play:
                         Intent intent = new Intent(GameActivity.this, GameActivity.class);
                         intent.putExtra("User", mUser);
-                        startActivity(intent);
+                        startActivityForResult(intent, 0);
                         return true;
                     case R.id.navigation_view:
                         Intent intent1 = new Intent(GameActivity.this, GameActivity.class);
                         intent1.putExtra("User", mUser);
-                        startActivity(intent1);
+                        startActivityForResult(intent1, 0);
                         return true;
                 }
                 return false;
@@ -62,7 +64,7 @@ public class GameActivity extends AppCompatActivity {
         infoTextView.setText(getString(R.string.score_text) +
                 mUser.getCurrentScore() +
                 "\n" + getString(R.string.words_remaining_text) +
-                DatabaseHelper.WORDS.size() + "\n\n" + mDatabaseHelper.printLists());
+                DatabaseHelper.WORDS.size());
 
         Button verbButton = findViewById(R.id.random_verb_button);
         verbButton.setOnClickListener(new View.OnClickListener() {
@@ -127,21 +129,23 @@ public class GameActivity extends AppCompatActivity {
                             .show();
                 } else {
                     if(isCorrect()) {
+                        String word;
                         Toast.makeText(GameActivity.this,
                                 R.string.correct_entry, Toast.LENGTH_SHORT)
                                 .show();
                         mUser.setCurrentScore(mUser.getCurrentScore() + 1);
                         if(!isSynonym(editTextView.getText().toString())) {
                             mUser.addCompletedWord(editTextView.getText().toString());
+                            word = editTextView.getText().toString();
                         } else {
-                            String word = mDatabaseHelper.getWord(editTextView.getText().toString());
+                            word = mDatabaseHelper.getWord(editTextView.getText().toString());
                             mUser.addCompletedWord(word);
                         }
-                        mDatabaseHelper.updateAfterCorrectEntry(editTextView.getText().toString());
+                        mDatabaseHelper.updateAfterCorrectEntry(word);
                         infoTextView.setText(getString(R.string.score_text) +
                                 mUser.getCurrentScore() +
                                 "\n" + getString(R.string.words_remaining_text) +
-                                DatabaseHelper.WORDS.size() + "\n" + mDatabaseHelper.printLists());
+                                DatabaseHelper.WORDS.size());
                         verbTextView.setText("");
                         prepositionTextView.setText("");
                         editTextView.setText("");
@@ -174,15 +178,16 @@ public class GameActivity extends AppCompatActivity {
                 String preposition = prepositionTextView.getText().toString();
                 String word = mDatabaseHelper.getWord(verb, preposition);
                 System.out.println(word);
+                boolean found = false;
                 if(mDatabaseHelper.hasSynonyms(word)) {
                     String[] synonyms = mDatabaseHelper.getSynonyms(word);
-                    for (int i = 0; i < synonyms.length - 1; i++) {
-                        if (synonyms[i] != null) {
-                            return synonyms[i].equals(entry);
+                    for (String synonym : synonyms) {
+                        if (synonym != null && synonym.equals(entry)) {
+                            found = true;
                         }
                     }
                 }
-                return false;
+                return found;
             }
 
             private boolean VerbPrepositionPairIsEmpty() {
@@ -195,14 +200,28 @@ public class GameActivity extends AppCompatActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        System.out.println(mUser.toString());
         mDatabaseHelper.saveGame(mUser);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences.edit().putString("User", mUser.getUserName()).apply();
+        sharedPreferences.edit().putStringSet("Words", mUser.getCompletedWords()).apply();
+        sharedPreferences.edit().putInt("CurrentScore", mUser.getCurrentScore()).apply();
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        System.out.println(mUser.toString());
-        mDatabaseHelper.saveGame(mUser);
+    public void onBackPressed() {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra("User", mUser);
+        startActivityForResult(intent, 0);
+        finish();
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch(resultCode) {
+            case 0:
+                this.setResult(0);
+                this.finish();
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 }

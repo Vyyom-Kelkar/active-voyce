@@ -1,7 +1,10 @@
 word,verb,preposition,synonym1,synonym2
-prolong,push,out
-suppress,hold,in
-halt,pull,up,stop
+exhaust,run,out,finish,deplete
+escape,run,from
+accost,run,against,oppose,resist
+crusade,run,for,campaign,support
+assail,run,at
+swamped,run,about
+altercation,run,in,fight,spat
 inaugural,run,up,upcoming
 linger,hold,out,wait,pause
-begrudge,hold,against

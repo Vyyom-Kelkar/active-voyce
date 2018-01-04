@@ -68,6 +68,10 @@ public class User implements Serializable {
         this.completedWords.add(completedWords);
     }
 
+    void addCompletedWords(Set<String> completedWords) {
+        this.completedWords.addAll(completedWords);
+    }
+
     @Override
     public String toString() {
         String info = "User Name = " + getUserName() + "\nHigh Score = " + getHighScore() +
